@@ -132,6 +132,13 @@ module Cinch
     end
 
     # @api private
+    # @return [void]
+    # @since 2.0.4
+    def send_list
+      send "LIST"
+    end
+
+    # @api private
     # @return [Thread] the reading thread
     # @since 2.0.0
     def start_reading_thread
@@ -640,6 +647,18 @@ module Cinch
       user     = User(msg.params[1])
       channels = msg.params[2].scan(/#{@isupport["CHANTYPES"].join}[^ ]+/o).map {|c| Channel(c) }
       user.sync(:channels, channels, true)
+    end
+
+    def on_322(msg, events)
+      # RPL_LIST
+      @channel_list_tmp ||= []
+      @channel_list_tmp << msg
+    end
+
+    def on_323(msg, events)
+      # RPL_LISTEND
+      @channel_list = @channel_list_tmp
+      @channel_list_tmp = nil
     end
 
     def on_324(msg, events)
